@@ -1,160 +1,187 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Facebook in iframe</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Embed: balase.infinityfree.me</title>
+  <style>
+    /* ----- global reset & fullscreen base ----- */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-        body {
-            background: #f0f2f5;
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 16px;
-        }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;        /* kill scrollbars on the shell */
+      background: #0b0e14;    /* neutral fallback while iframe loads */
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    }
 
-        .card {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
-            padding: 20px 20px 10px 20px;
-            max-width: 900px;
-            width: 100%;
-            transition: all 0.2s ease;
-        }
+    /* ----- iframe container: truly 100% x 100% ----- */
+    .iframe-wrapper {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;          /* dynamic viewport height for mobile (safe) */
+      overflow: hidden;
+      position: relative;
+      background: #1a1f2a;     /* subtle background behind iframe */
+    }
 
-        .card-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 18px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid #e4e6eb;
-        }
+    iframe {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border: none;           /* no borders */
+      margin: 0;
+      padding: 0;
+      background: #fff;       /* white bg while loading (faster perceived load) */
+      /* optional: smooth loading effect */
+      transition: opacity 0.2s ease;
+    }
 
-        .card-header h1 {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: #1b1f23;
-            letter-spacing: -0.3px;
-        }
+    /* ----- tiny "no-cors / sandbox" note (only visible on very narrow screens) ----- */
+    .attribution {
+      position: fixed;
+      bottom: 12px;
+      right: 16px;
+      font-size: 11px;
+      background: rgba(10, 14, 23, 0.65);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      color: rgba(255, 255, 255, 0.5);
+      padding: 6px 14px;
+      border-radius: 40px;
+      letter-spacing: 0.3px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      pointer-events: none;   /* allow clicks to pass through to iframe */
+      user-select: none;
+      z-index: 999;
+      font-weight: 400;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      transition: opacity 0.3s;
+    }
+    .attribution a {
+      color: rgba(200, 220, 255, 0.7);
+      text-decoration: none;
+      pointer-events: auto;    /* make link clickable if needed */
+      border-bottom: 1px dotted rgba(255,255,255,0.15);
+    }
+    .attribution a:hover {
+      color: #b8d0ff;
+      border-bottom-color: rgba(180, 200, 255, 0.5);
+    }
 
-        .fb-icon {
-            width: 36px;
-            height: 36px;
-            background: #1877f2;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 700;
-            font-size: 1.4rem;
-            box-shadow: 0 2px 6px rgba(24, 119, 242, 0.3);
-        }
+    /* ----- small screen adjustment: attribution more compact ----- */
+    @media (max-width: 480px) {
+      .attribution {
+        bottom: 10px;
+        right: 10px;
+        font-size: 10px;
+        padding: 4px 12px;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(3px);
+        -webkit-backdrop-filter: blur(3px);
+      }
+    }
 
-        .iframe-container {
-            position: relative;
-            width: 100%;
-            padding-bottom: 75%; /* 4:3 aspect ratio – good for desktop FB */
-            height: 0;
-            overflow: hidden;
-            border-radius: 16px;
-            background: #e4e6eb;
-            box-shadow: inset 0 0 0 1px rgba(0,0,0,0.04);
-        }
-
-        .iframe-container iframe {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border: 0;
-            border-radius: 12px;
-            background: white;
-            /* allow scrolling inside iframe (some browsers need this) */
-            overflow: auto;
-        }
-
-        .footnote {
-            margin-top: 16px;
-            font-size: 0.85rem;
-            color: #65676b;
-            text-align: center;
-            letter-spacing: 0.2px;
-            padding: 6px 0 2px 0;
-            border-top: 1px solid #e4e6eb;
-        }
-
-        .footnote a {
-            color: #1877f2;
-            text-decoration: none;
-            font-weight: 500;
-        }
-
-        .footnote a:hover {
-            text-decoration: underline;
-        }
-
-        /* small screens */
-        @media (max-width: 600px) {
-            .card {
-                padding: 14px 14px 8px 14px;
-            }
-            .card-header h1 {
-                font-size: 1.2rem;
-            }
-            .iframe-container {
-                padding-bottom: 100%; /* square on mobile – better for vertical feed */
-            }
-        }
-
-        /* taller screens (like mobile landscape) */
-        @media (max-height: 700px) and (min-width: 500px) {
-            .iframe-container {
-                padding-bottom: 60%;
-            }
-        }
-    </style>
+    /* ----- iframe load state (optional: show subtle pulse) ----- */
+    iframe.loading {
+      opacity: 0.6;
+    }
+    iframe.loaded {
+      opacity: 1;
+    }
+  </style>
 </head>
 <body>
-    <div class="card">
-        <!-- header with Facebook branding -->
-        <div class="card-header">
-            <div class="fb-icon">f</div>
-            <h1>Facebook · embedded</h1>
-        </div>
+  <div class="iframe-wrapper">
+    <!-- 
+      The iframe points to https://balase.infinityfree.me
+      with 100% width & height.
+      Sandbox attributes are intentionally permissive to allow 
+      most content to render, while still providing basic security.
+      'allow-same-origin' + 'allow-scripts' + 'allow-forms' + 'allow-popups' 
+      are common for embedded sites that need full functionality.
+      'allow-modals' is also included for dialog/alert usage if needed.
+    -->
+    <iframe 
+      src="https://balase.infinityfree.me" 
+      title="balase.infinityfree.me embedded content"
+      sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals allow-downloads"
+      loading="lazy"
+      allow="accelerometer; camera; encrypted-media; geolocation; gyroscope; microphone; midi; clipboard-write; web-share"
+      referrerpolicy="strict-origin-when-cross-origin"
+      id="main-iframe"
+    ></iframe>
+  </div>
 
-        <!-- iframe wrapper – keeps responsive ratio -->
-        <div class="iframe-container">
-            <iframe 
-                src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Ffacebook&tabs=timeline&width=500&height=600&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true&appId"
-                allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
-                allowfullscreen="true"
-                loading="lazy"
-                referrerpolicy="no-referrer-when-downgrade"
-                title="Facebook embedded timeline"
-                sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-modals"
-            ></iframe>
-        </div>
+  <!-- subtle attribution — not intrusive, just informative -->
+  <div class="attribution">
+    <span>⛓️ </span><a href="https://balase.infinityfree.me" target="_blank" rel="noopener noreferrer">balase.infinityfree.me</a>
+  </div>
 
-        <!-- small note: facebook iframe limitations -->
-        <div class="footnote">
-            ⚡ Facebook iframe • 
-            <a href="https://www.facebook.com/facebook" target="_blank" rel="noopener">facebook.com/facebook</a> 
-            <span style="margin:0 6px;">·</span> 
-            <span style="opacity:0.7;">(some features may be restricted by Facebook)</span>
-        </div>
-    </div>
+  <script>
+    (function() {
+      const iframe = document.getElementById('main-iframe');
+
+      // optional: add a small 'loading' class on start
+      iframe.classList.add('loading');
+
+      // once iframe loads, remove loading state and add loaded class
+      function onIframeLoad() {
+        iframe.classList.remove('loading');
+        iframe.classList.add('loaded');
+        // optional: you could also log or adjust anything else
+      }
+
+      // if iframe already loaded (cached), fire immediately
+      if (iframe.contentWindow?.location?.href) {
+        // if the iframe has already loaded its content, we treat as loaded
+        // but we still listen to the load event for safety
+      }
+
+      // listen to load event
+      iframe.addEventListener('load', onIframeLoad);
+
+      // fallback: if load event never fires (e.g., network hiccup), 
+      // force remove loading class after 8 seconds anyway
+      const fallbackTimer = setTimeout(() => {
+        iframe.classList.remove('loading');
+        iframe.classList.add('loaded');
+      }, 8000);
+
+      // clean up timer if load fires first
+      iframe.addEventListener('load', function cleanup() {
+        clearTimeout(fallbackTimer);
+        // also remove this listener to avoid duplicates
+        iframe.removeEventListener('load', cleanup);
+      });
+
+      // handle iframe errors gracefully: remove loading state
+      iframe.addEventListener('error', function onError() {
+        iframe.classList.remove('loading');
+        iframe.classList.add('loaded');
+        // you could optionally show a small fallback, but we keep it clean
+        console.warn('iframe failed to load: https://balase.infinityfree.me');
+      });
+
+      // small extra: if the site uses CSP or mixed content, 
+      // the iframe may show a blank page — but we still display it.
+      // We also ensure the wrapper has no extra padding.
+    })();
+  </script>
+
+  <!-- 
+    Additional inline note: 
+    Some browsers may block iframe content due to X-Frame-Options.
+    If balase.infinityfree.me sends 'X-Frame-Options: DENY' or 'SAMEORIGIN',
+    the iframe will not load. This is a server-side restriction.
+    The snippet is built to embed it as is — if the site allows embedding,
+    it will work with 100% width and height.
+  -->
 </body>
-  </html>
+                       </html>
